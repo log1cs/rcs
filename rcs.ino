@@ -1,6 +1,9 @@
 #include <LiquidCrystal_I2C.h>
 #include <SoftwareSerial.h>
 
+// Khai báo môi trường
+#define HOST_HAS_LEGACY_LIQUIDCRYSTAL_LIBRARY true
+
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 const int buttonPin[4] = {29, 30, 31, 18}; // RIGHT, RUN, LEFT, STOP
@@ -663,7 +666,11 @@ void setup() {
     pinMode(buttonPin[i], INPUT_PULLUP);
   }
   attachInterrupt(digitalPinToInterrupt(buttonPin[3]), stopISR, FALLING);
+#if HOST_HAS_LEGACY_LIQUIDCRYSTAL_LIBRARY
+  lcd.begin();
+#else
   lcd.init();
+#endif
   lcd.backlight();
   loading();
   showFragment(cntFragment);
