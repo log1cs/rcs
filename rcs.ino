@@ -51,6 +51,24 @@ String datablue;
 int turnType = 1; 
 int speed = 60;
 
+void MotorInit(bool is_analog_needed) {
+  // Cấu hình tất cả các chân đều là đầu ra
+  pinMode(in1_L298N_no1, OUTPUT); 
+  pinMode(in2_L298N_no1, OUTPUT); 
+  pinMode(in3_L298N_no1, OUTPUT); 
+  pinMode(in4_L298N_no1, OUTPUT);
+  pinMode(in1_L298N_no2, OUTPUT); 
+  pinMode(in2_L298N_no2, OUTPUT); 
+  pinMode(in3_L298N_no2, OUTPUT); 
+  pinMode(in4_L298N_no2, OUTPUT);
+  
+  pinMode(ENB, OUTPUT);
+  
+  // Chỉ chạy code dưới khi is_analog_needed = 1
+  if (is_analog_needed)
+	analogWrite(ENB, 80);
+}	
+
 // Do khoang cach
 float getSonar() {
   unsigned long pingTime;
@@ -83,17 +101,8 @@ void ultrasonic_setup(){
   pinMode(echoPin, INPUT);   
   Serial.begin(9600);
 
-  // Set all the motor control pin to outputs
-  pinMode(in1_L298N_no1, OUTPUT); 
-  pinMode(in2_L298N_no1, OUTPUT); 
-  pinMode(in3_L298N_no1, OUTPUT); 
-  pinMode(in4_L298N_no1, OUTPUT);
-  pinMode(in1_L298N_no2, OUTPUT); 
-  pinMode(in2_L298N_no2, OUTPUT); 
-  pinMode(in3_L298N_no2, OUTPUT); 
-  pinMode(in4_L298N_no2, OUTPUT);
-  
-  pinMode(ENB, OUTPUT);
+  // Không cần analog
+  MotorInit(false);
 }
 
 void line_scan_setup() {
@@ -102,52 +111,23 @@ void line_scan_setup() {
   pinMode(sensorMiddle, INPUT);
   pinMode(sensorRight, INPUT);
 
-  // Motor
-  pinMode(in1_L298N_no1, OUTPUT);
-  pinMode(in2_L298N_no1, OUTPUT);
-  pinMode(in3_L298N_no1, OUTPUT);
-  pinMode(in4_L298N_no1, OUTPUT);
-  pinMode(in1_L298N_no2, OUTPUT);
-  pinMode(in2_L298N_no2, OUTPUT);
-  pinMode(in3_L298N_no2, OUTPUT);
-  pinMode(in4_L298N_no2, OUTPUT);
-
-  pinMode(ENB, OUTPUT);
-
-  analogWrite(ENB, 80);
+  // Cần analog
+  MotorInit(true);
 }
 
 void bluetooth_setup() {
   //Bluetooth.begin(9600);
   Serial3.begin(9600); 
-  // Motor
-  pinMode(in1_L298N_no1, OUTPUT);
-  pinMode(in2_L298N_no1, OUTPUT);
-  pinMode(in3_L298N_no1, OUTPUT);
-  pinMode(in4_L298N_no1, OUTPUT);
-  pinMode(in1_L298N_no2, OUTPUT);
-  pinMode(in2_L298N_no2, OUTPUT);
-  pinMode(in3_L298N_no2, OUTPUT);
-  pinMode(in4_L298N_no2, OUTPUT);
 
-  pinMode(ENB, OUTPUT);
-
-  analogWrite(ENB, 80);
+  // Cần analog
+  MotorInit(true);
 }
 
 void camera_setup(){
   Serial.begin(9600); // Match this with the baud rate you use on Raspberry Pi
-    // Motor
-  pinMode(in1_L298N_no1, OUTPUT);
-  pinMode(in2_L298N_no1, OUTPUT);
-  pinMode(in3_L298N_no1, OUTPUT);
-  pinMode(in4_L298N_no1, OUTPUT);
-  pinMode(in1_L298N_no2, OUTPUT);
-  pinMode(in2_L298N_no2, OUTPUT);
-  pinMode(in3_L298N_no2, OUTPUT);
-  pinMode(in4_L298N_no2, OUTPUT);
 
-  pinMode(ENB, OUTPUT);
+  // Không cần analog
+  MotorInit(false);
 
   while (!Serial) {
     ; // Wait for serial port to connect. Needed for native USB (Leonardo, etc.)
