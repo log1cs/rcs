@@ -12,7 +12,7 @@ const int buttonNum = sizeof(buttonPin) / sizeof(buttonPin[0]);
 const int speedNum = sizeof(modeSpeed) / sizeof(modeSpeed[0]);
 int cntFragment = 0;
 int cntSpeed = 1;
-int realSpeed = 0;
+int RealSpeed = 0;
 bool pre[] = {HIGH, HIGH, HIGH, HIGH};
 bool cur[] = {HIGH, HIGH, HIGH, HIGH};
 bool stop = false;
@@ -54,23 +54,150 @@ String datablue;
 int turnType = 1; 
 int speed = 60;
 
+/*
+ * Các chức năng điều hướng cho Robot.
+ */
+// Cấu hình cho motor dừng lại
+void Stop() {
+    digitalWrite(in1_L298N_no1, LOW);
+    digitalWrite(in2_L298N_no1, LOW);
+    digitalWrite(in3_L298N_no1, LOW);
+    digitalWrite(in4_L298N_no1, LOW);
+    digitalWrite(in1_L298N_no2, LOW);
+    digitalWrite(in2_L298N_no2, LOW);
+    digitalWrite(in3_L298N_no2, LOW);
+    digitalWrite(in4_L298N_no2, LOW);
+}
+
+// Cấu hình cho motor quay trái
+void MoveLeft() {
+    digitalWrite(in1_L298N_no1, HIGH);
+    digitalWrite(in2_L298N_no1, LOW);
+    digitalWrite(in3_L298N_no1, LOW);
+    digitalWrite(in4_L298N_no1, HIGH);
+    digitalWrite(in1_L298N_no2, HIGH);
+    digitalWrite(in2_L298N_no2, LOW);
+    digitalWrite(in3_L298N_no2, LOW);
+    digitalWrite(in4_L298N_no2, HIGH);	
+}
+
+// Cấu hình cho motor quay phải
+void MoveRight() {
+    digitalWrite(in1_L298N_no1, LOW);
+    digitalWrite(in2_L298N_no1, HIGH);
+    digitalWrite(in3_L298N_no1, HIGH);
+    digitalWrite(in4_L298N_no1, LOW);
+    digitalWrite(in1_L298N_no2, LOW);
+    digitalWrite(in2_L298N_no2, HIGH);
+    digitalWrite(in3_L298N_no2, HIGH);
+    digitalWrite(in4_L298N_no2, LOW);	
+}
+
+// Cấu hình cho motor đi tiến
+void MoveForward() {
+    digitalWrite(in1_L298N_no1, HIGH);
+    digitalWrite(in2_L298N_no1, LOW);
+    digitalWrite(in3_L298N_no1, HIGH);
+    digitalWrite(in4_L298N_no1, LOW);
+    digitalWrite(in1_L298N_no2, HIGH);
+    digitalWrite(in2_L298N_no2, LOW);
+    digitalWrite(in3_L298N_no2, HIGH);
+    digitalWrite(in4_L298N_no2, LOW);	
+}
+
+// Cấu hình cho motor đi lùi
+void MoveBackward() {
+    digitalWrite(in1_L298N_no1, LOW);
+    digitalWrite(in2_L298N_no1, HIGH);
+    digitalWrite(in3_L298N_no1, LOW);
+    digitalWrite(in4_L298N_no1, HIGH);
+    digitalWrite(in1_L298N_no2, LOW);
+    digitalWrite(in2_L298N_no2, HIGH);
+    digitalWrite(in3_L298N_no2, LOW);
+    digitalWrite(in4_L298N_no2, HIGH);
+}
+
+/*
+ * Các hàm bên dưới bao quát phần điều khiển động cơ.
+ * enum MovementType: Các hướng đi.
+ * MotorInit(): Khởi tạo, setup động cơ
+ * MotorControl(): Điều khiển động cơ theo các hướng được định sẵn
+ */
+ 
+enum MovementType {
+  MOVE_STOP,		// Sang trái
+  MOVE_FORWARD,		// Đi thẳng
+  MOVE_BACKWARD,	// Đi lùi
+  MOVE_LEFT,		// Sang trái
+  MOVE_RIGHT		// Sang phải
+};
+
 void MotorInit(bool is_analog_needed) {
-  // Cấu hình tất cả các chân đều là đầu ra
-  pinMode(in1_L298N_no1, OUTPUT); 
-  pinMode(in2_L298N_no1, OUTPUT); 
-  pinMode(in3_L298N_no1, OUTPUT); 
-  pinMode(in4_L298N_no1, OUTPUT);
-  pinMode(in1_L298N_no2, OUTPUT); 
-  pinMode(in2_L298N_no2, OUTPUT); 
-  pinMode(in3_L298N_no2, OUTPUT); 
-  pinMode(in4_L298N_no2, OUTPUT);
+	// Cấu hình tất cả các chân đều là đầu ra
+	pinMode(in1_L298N_no1, OUTPUT); 
+	pinMode(in2_L298N_no1, OUTPUT); 
+	pinMode(in3_L298N_no1, OUTPUT); 
+	pinMode(in4_L298N_no1, OUTPUT);
+	pinMode(in1_L298N_no2, OUTPUT); 
+	pinMode(in2_L298N_no2, OUTPUT); 
+	pinMode(in3_L298N_no2, OUTPUT); 
+	pinMode(in4_L298N_no2, OUTPUT);
   
-  pinMode(ENB, OUTPUT);
+	pinMode(ENB, OUTPUT);
   
-  // Chỉ chạy code dưới khi is_analog_needed = 1
-  if (is_analog_needed)
-	analogWrite(ENB, 80);
+	// Chỉ chạy code dưới khi is_analog_needed = 1
+	if (is_analog_needed)
+		analogWrite(ENB, 80);
 }	
+
+/* Hàm điều khiển động cơ
+ * Tốc độ động cơ sẽ tự động bằng 60 nếu không có
+ * giá trị nào được truyền vào.
+ */ 
+void MotorControl(MovementType direction, int speed = 60) {
+	RealSpeed = speed;
+
+	switch (direction) {
+		case MOVE_STOP:
+			Serial.println("Stop");
+			Stop();
+			break;
+		case MOVE_FORWARD:
+			Serial.println("Forward");
+			MoveForward();
+			break;
+		case MOVE_BACKWARD:
+			Serial.println("Backward");
+			MoveBackward();
+			break;
+		case MOVE_LEFT:
+			Serial.println("Left");
+			MoveLeft();
+			break;
+		case MOVE_RIGHT:
+			Serial.println("Right");
+			MoveRight();
+			break;
+	}
+	analogWrite(ENB, RealSpeed);
+}
+
+void moveMotors(
+  bool m1_in1, bool m1_in2, bool m1_in3, bool m1_in4,
+  bool m2_in1, bool m2_in2, bool m2_in3, bool m2_in4,
+  int speedA, int speedB
+) {
+  digitalWrite(in1_L298N_no1, m1_in1);
+  digitalWrite(in2_L298N_no1, m1_in2);
+  digitalWrite(in3_L298N_no1, m1_in3);
+  digitalWrite(in4_L298N_no1, m1_in4);
+  digitalWrite(in1_L298N_no2, m2_in1);
+  digitalWrite(in2_L298N_no2, m2_in2);
+  digitalWrite(in3_L298N_no2, m2_in3);
+  digitalWrite(in4_L298N_no2, m2_in4);
+  analogWrite(ENA, speedA);
+  analogWrite(ENB, speedB);
+}
 
 // Do khoang cach
 float getSonar() {
@@ -138,91 +265,12 @@ void camera_setup(){
   Serial.println("Arduino ready to receive");
 }
 
-void moveMotors(
-  bool m1_in1, bool m1_in2, bool m1_in3, bool m1_in4,
-  bool m2_in1, bool m2_in2, bool m2_in3, bool m2_in4,
-  int speedA, int speedB
-) {
-  digitalWrite(in1_L298N_no1, m1_in1);
-  digitalWrite(in2_L298N_no1, m1_in2);
-  digitalWrite(in3_L298N_no1, m1_in3);
-  digitalWrite(in4_L298N_no1, m1_in4);
-  digitalWrite(in1_L298N_no2, m2_in1);
-  digitalWrite(in2_L298N_no2, m2_in2);
-  digitalWrite(in3_L298N_no2, m2_in3);
-  digitalWrite(in4_L298N_no2, m2_in4);
-  analogWrite(ENA, speedA);
-  analogWrite(ENB, speedB);
-}
-
-// Hàm điều khiển động cơ
-void motorRun(float speedl, float speedr) {
-  if (speedl == 0 && speedr == 0) {
-    // Đứng im
-    Serial.println("dung");
-    digitalWrite(in1_L298N_no1, LOW);
-    digitalWrite(in2_L298N_no1, LOW);
-    digitalWrite(in3_L298N_no1, LOW);
-    digitalWrite(in4_L298N_no1, LOW);
-    digitalWrite(in1_L298N_no2, LOW);
-    digitalWrite(in2_L298N_no2, LOW);
-    digitalWrite(in3_L298N_no2, LOW);
-    digitalWrite(in4_L298N_no2, LOW);
-  } else if (speedl < 0 && speedr < 0) {
-    // Lùi
-    Serial.println("Lui");
-    digitalWrite(in1_L298N_no1, LOW);
-    digitalWrite(in2_L298N_no1, HIGH);
-    digitalWrite(in3_L298N_no1, LOW);
-    digitalWrite(in4_L298N_no1, HIGH);
-    digitalWrite(in1_L298N_no2, LOW);
-    digitalWrite(in2_L298N_no2, HIGH);
-    digitalWrite(in3_L298N_no2, LOW);
-    digitalWrite(in4_L298N_no2, HIGH);
-  } else if (speedl < 0) {
-    // Quay phải
-    Serial.println("Right");
-    digitalWrite(in1_L298N_no1, LOW);
-    digitalWrite(in2_L298N_no1, HIGH);
-    digitalWrite(in3_L298N_no1, HIGH);
-    digitalWrite(in4_L298N_no1, LOW);
-    digitalWrite(in1_L298N_no2, LOW);
-    digitalWrite(in2_L298N_no2, HIGH);
-    digitalWrite(in3_L298N_no2, HIGH);
-    digitalWrite(in4_L298N_no2, LOW);
-  } else if (speedr < 0) {
-    // Quay trái
-    Serial.println("Left");
-    digitalWrite(in1_L298N_no1, HIGH);
-    digitalWrite(in2_L298N_no1, LOW);
-    digitalWrite(in3_L298N_no1, LOW);
-    digitalWrite(in4_L298N_no1, HIGH);
-    digitalWrite(in1_L298N_no2, HIGH);
-    digitalWrite(in2_L298N_no2, LOW);
-    digitalWrite(in3_L298N_no2, LOW);
-    digitalWrite(in4_L298N_no2, HIGH);
-  } else {
-    // Tiến
-      Serial.println("Tien");
-    digitalWrite(in1_L298N_no1, HIGH);
-    digitalWrite(in2_L298N_no1, LOW);
-    digitalWrite(in3_L298N_no1, HIGH);
-    digitalWrite(in4_L298N_no1, LOW);
-    digitalWrite(in1_L298N_no2, HIGH);
-    digitalWrite(in2_L298N_no2, LOW);
-    digitalWrite(in3_L298N_no2, HIGH);
-    digitalWrite(in4_L298N_no2, LOW);
-  }
-
-  analogWrite(ENB, abs(speedr * realSpeed));
-}
-
 bool check_stop() {
   if (stop) {
     stop = false;
     lcd.clear();
     lcd.print("Stopped");
-    motorRun(0, 0); // Dừng motor
+    MotorControl(MOVE_STOP, RealSpeed); // Dừng motor
     delay(1000);
     return true;
   }
@@ -236,8 +284,8 @@ void ultrasonic_loop(){
 
   // kiem tra
   if(distance < OBSTACLE_DISTANCE_LOW){
-    realSpeed = 60;
-    motorRun(-1, -1); // di lui
+    RealSpeed = 60;
+    MotorControl(MOVE_BACKWARD, RealSpeed);		// Đi lùi
     for (int i = 0; i< 10; i++){
       if (check_stop()) {
         stop = true;
@@ -248,15 +296,16 @@ void ultrasonic_loop(){
     //delay(450); !!!!!!!!!!!!!      
   }    
   else if (distance < OBSTACLE_DISTANCE) {
-    realSpeed = 80;
-    motorRun(pow(-1, (int)(turnType / 3)), pow(-1, (int)(turnType / 3) + 1)); // speed < 80
+    RealSpeed = 80;
+    MovementType direction = (turnType / 3) % 2 == 0 ? MOVE_LEFT : MOVE_RIGHT;
+	MotorControl(direction, RealSpeed);
     for (int i = 0; i < 3; i++, turnType++) {
       Serial.print("turnType: "); 
       Serial.println(turnType);  
       for (int i = 0; i< 10; i++){
         if (check_stop()) {
           stop = true;
-          return ;
+          return;
         }
         delay(50); 
       }
@@ -272,8 +321,8 @@ void ultrasonic_loop(){
   }
   else if(distance >= OBSTACLE_DISTANCE)
   {
-    realSpeed = 60;
-    motorRun(1, 1); // di thang      
+    RealSpeed = 60;
+    MotorControl(MOVE_FORWARD, RealSpeed); // Đi thẳng      
     delay(3); 
   }    
   // speed = .. 
@@ -300,27 +349,27 @@ void line_scan_loop() {
   Serial.print("R: "); Serial.println(R);
 
   if (M == 1 && L == 0 && R == 0) {
-    motorRun(1, 1);
+    MotorControl(MOVE_FORWARD, RealSpeed);
     delay(50); // Đi thẳng
   } 
   else if (L == 1 && M == 1 && R == 0) {
-    motorRun(-1, 1);
-    delay(350); // Rẽ phải mạnh
+    MotorControl(MOVE_RIGHT, RealSpeed);
+    delay(350); // Rẽ phải mạnh (vì xung PWM chạy trong 350ms)
   } 
   else if (R == 1 && M == 1 && L == 0) {
-    motorRun(1, -1);
-    delay(350); // Rẽ trái mạnh
+    MotorControl(MOVE_LEFT, RealSpeed);
+    delay(350); // Rẽ trái mạnh (vì xung PWM chạy trong 350ms)
   }
   else if (L == 1 && M == 0 && R == 0) {
-    motorRun(-1, 1);
-    delay(50); // Rẽ phải nhẹ
+    MotorControl(MOVE_RIGHT, RealSpeed);
+    delay(50); // Rẽ phải nhẹ (vì xung PWM chỉ chạy trong 50ms)
   }
   else if (R == 1 && M == 0 && L == 0) {
-    motorRun(1, -1);
-    delay(50); // Rẽ trái nhẹ
+    MotorControl(MOVE_LEFT, RealSpeed);
+    delay(50); // Rẽ trái nhẹ (vì xung PWM chỉ chạy trong 50ms)
   }
   else {
-    motorRun(1, 1); // Mặc định tiến nếu nhiều cảm biến cùng thấy line
+    MotorControl(MOVE_FORWARD, RealSpeed);  // Mặc định tiến nếu nhiều cảm biến cùng thấy line
   }
 }
 
@@ -500,7 +549,7 @@ void printRun() {
   lcd.println("Robot is running");
   lcd.setCursor(0, 1);
   lcd.print("Speed = ");
-  lcd.print(realSpeed);
+  lcd.print(RealSpeed);
 }
 
 void ultrasonic_mode() {
@@ -513,8 +562,9 @@ void ultrasonic_mode() {
     }
     ultrasonic_loop();
   }
-  realSpeed = 70; // Đặt lại speed real
-  motorRun(0, 0); // Dừng motor
+  
+  RealSpeed = 70; // Đặt lại speed real
+  MotorControl(MOVE_STOP, RealSpeed); // Dừng motor
 }
 
 void line_scan_mode() {
@@ -526,7 +576,8 @@ void line_scan_mode() {
     }
     line_scan_loop();
   }
-  motorRun(0, 0); // Dừng motor
+  
+  MotorControl(MOVE_STOP, RealSpeed); // Dừng motor
 }
 
 void camera_mode() {
@@ -539,7 +590,8 @@ void camera_mode() {
     }
     camera_loop();
   }
-  motorRun(0, 0); // Dừng motor
+  
+  MotorControl(MOVE_STOP, RealSpeed); // Dừng motor
 }
 
 void bluetooth_mode() {
@@ -551,7 +603,8 @@ void bluetooth_mode() {
     }
     bluetooth_loop();
   }
-  motorRun(0, 0); // Dừng motor
+  
+  MotorControl(MOVE_STOP, RealSpeed); // Dừng motor
 }
 
 void showFragment(int cnt) {
@@ -606,7 +659,7 @@ bool speedRun() {
             showModeSpeed(cntSpeed);
             break;
           case 1: // RUN
-            realSpeed = modeSpeed[cntSpeed];
+            RealSpeed = modeSpeed[cntSpeed];
             for (int i = 0; i < buttonNum; i += 1) {
               pre[i] = HIGH;
             }
