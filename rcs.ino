@@ -22,9 +22,10 @@ char c = 0;
 #define sensorLeft 24
 #define sensorMiddle 26
 #define sensorRight 28
+
 // Khai báo chân cảm biến siêu âm - HCSR04
-#define trigPin 13
-#define echoPin 12
+#define trigPin 16
+#define echoPin 17
 
 // Khai báo chân điều khiển động cơ
 // Motor 1
